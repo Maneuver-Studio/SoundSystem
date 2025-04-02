@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 
@@ -30,9 +31,22 @@ namespace Maneuver.SoundSystem
             do
             {
                 await UniTask.Delay(Mathf.CeilToInt(audioFile.Clip.length * 1000));
-
             } while (audioFile.IsLoop &&  audioSource.isPlaying);
 
+            try
+            {
+                _soundPool.Pool.Release(audioSource);
+            }
+            catch (System.Exception)
+            {
+            }
+        }
+
+        public void Stop(AudioFileObject audioFile)
+        {
+            var audioSource = _soundPool.ActivedAudioSource.First(a => a.clip == audioFile.Clip);
+
+            audioSource.Stop();
             _soundPool.Pool.Release(audioSource);
         }
     }

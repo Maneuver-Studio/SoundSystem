@@ -29,5 +29,10 @@ namespace Maneuver.SoundSystem
         {
             
         }
+
+        private void OnDestroyer()
+        {
+            Stop();
+        }
     }
 }

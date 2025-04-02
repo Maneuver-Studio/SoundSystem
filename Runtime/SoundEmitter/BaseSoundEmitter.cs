@@ -12,5 +12,10 @@ namespace Maneuver.SoundSystem
         {
             _audioManager.Play(_audioFileObject);
         }
+
+        public virtual void Stop()
+        {
+            _audioManager.Stop(_audioFileObject);
+        }
     }
 }

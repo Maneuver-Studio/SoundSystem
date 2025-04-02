@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -20,7 +21,10 @@ namespace Maneuver.SoundSystem
         [SerializeField] private int _maxPoolSize = 1000;
         private const string PREX_NAME = "_AudioSourcePooled";
 
-        IObjectPool<AudioSource> _pool;
+        private List<AudioSource> _activedAudioSource = new List<AudioSource>();
+        public List<AudioSource> ActivedAudioSource => _activedAudioSource;
+
+        private IObjectPool<AudioSource> _pool;
         public IObjectPool<AudioSource> Pool
         {
             get
@@ -45,22 +49,26 @@ namespace Maneuver.SoundSystem
             // Reset default values
             audioSource.playOnAwake = false;
 
+            _activedAudioSource.Add(audioSource);
             // This is used to return BaseSoundEmitter to the pool when they have stopped.
             return audioSource;
         }
 
         private void OnTakeFromPool(AudioSource audioSource)
         {
+            _activedAudioSource.Add(audioSource);
             audioSource.gameObject.SetActive(true);
         }
 
         private void OnReturnedToPool(AudioSource audioSource)
         {
+            _activedAudioSource.Remove(audioSource);
             audioSource.gameObject.SetActive(false);
         }
 
         private void OnDestroyPoolObject(AudioSource audioSource)
         {
+            _activedAudioSource.Remove(audioSource);
             GameObject.Destroy(audioSource.gameObject);
         }
     }
