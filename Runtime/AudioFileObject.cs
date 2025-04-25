@@ -9,6 +9,12 @@ namespace Maneuver.SoundSystem
         public AudioClip Clip => _clip;
 
         [SerializeField] private bool _isLoop;
-        public bool IsLoop => _isLoop; 
+        public bool IsLoop => _isLoop;
+
+        public void Initialize(AudioClip clip, bool isLoop)
+        {
+            _clip = clip;
+            _isLoop = isLoop;
+        }
     }
 }
