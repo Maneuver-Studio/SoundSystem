@@ -11,10 +11,14 @@ namespace Maneuver.SoundSystem
         [SerializeField] private bool _isLoop;
         public bool IsLoop => _isLoop;
 
-        public void Initialize(AudioClip clip, bool isLoop)
+        [SerializeField] private AudioCategory _category;
+        public AudioCategory Category => _category;
+
+        public void Initialize(AudioClip clip, bool isLoop, AudioCategory category)
         {
             _clip = clip;
             _isLoop = isLoop;
+            _category = category;
         }
     }
 }
