@@ -92,11 +92,13 @@ namespace Maneuver.SoundSystem
 
         private static void ResetSourceRuntimeState(AudioSource s)
         {
+            if (s.clip == null)
+                return;
+
             // Estes estados podem ter sido alterados por fades/crossfades/reprodução anterior
             s.volume = 1f;      // <- crítico para teu bug
             s.pitch = 1f;
             s.loop = false;
-            s.clip = null;
             s.time = 0f;
             s.timeSamples = 0;
 
@@ -109,6 +111,7 @@ namespace Maneuver.SoundSystem
             // Pan e spread neutros
             s.panStereo = 0f;
             s.spread = 0f;
+            s.clip = null;
         }
 
         private static void SafeStopAndReset(AudioSource s)
