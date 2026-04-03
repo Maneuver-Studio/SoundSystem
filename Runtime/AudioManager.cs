@@ -73,6 +73,15 @@ namespace Maneuver.SoundSystem
                 }
             }
         }
+        public bool IsPlaying(AudioFileObject audioFile)
+        {
+            if (!audioFile || !audioFile.Clip) return false;
+
+            var cat = audioFile.Category;
+            var list = GetList(cat);
+
+            return list.Any(a => a && a.isPlaying && a.clip == audioFile.Clip);
+        }
 
         public async UniTask Stop(AudioFileObject audioFile, float fadeOut = 0.1f)
         {
@@ -89,8 +98,47 @@ namespace Maneuver.SoundSystem
             list.Remove(src);
             SafeRelease(src);
         }
+        public bool IsAnythingPlaying()
+        {
+            return _activeByCategory.Values
+                .Any(list => list.Any(s => s && s.isPlaying));
+        }
+        public UniTask WaitUntilFinished(AudioFileObject audioFile)
+        {
+            if (!audioFile || !audioFile.Clip) return UniTask.CompletedTask;
 
+            var cat = audioFile.Category;
+            var list = GetList(cat);
+
+            return UniTask.WaitUntil(() =>
+                !list.Any(a => a && a.isPlaying && a.clip == audioFile.Clip));
+        }
+
+        public UniTask WaitUntilAllFinished()
+        {
+            return UniTask.WaitUntil(() =>
+                !_activeByCategory.Values
+                    .Any(list => list.Any(s => s && s.isPlaying)));
+        }
         // --------- Categoria ---------
+
+        public UniTask WaitUntilCategoryFinished(AudioCategory category)
+        {
+            if (!category) return UniTask.CompletedTask;
+
+            var list = GetList(category);
+
+            return UniTask.WaitUntil(() =>
+                !list.Any(s => s && s.isPlaying));
+        }
+
+        public bool IsCategoryPlaying(AudioCategory category)
+        {
+            if (!category) return false;
+
+            var list = GetList(category);
+            return list.Any(s => s && s.isPlaying);
+        }
 
         public async UniTask StopCategory(AudioCategory category, bool immediate = false, float fadeOut = 0.2f)
         {

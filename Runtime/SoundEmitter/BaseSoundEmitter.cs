@@ -8,6 +8,8 @@ namespace Maneuver.SoundSystem
         [Inject] protected IAudioManager _audioManager;
         [SerializeField] protected AudioFileObject _audioFileObject;
 
+        public AudioFileObject AudioFile => _audioFileObject;
+
         public virtual void Play()
         {
             _audioManager.Play(_audioFileObject);

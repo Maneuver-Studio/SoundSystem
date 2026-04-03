@@ -1,6 +1,6 @@
 {
   "name": "com.maneuver.soundsystem",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Sound System",
   "description": "System  of state machine",
   "unity": "2022.3",
