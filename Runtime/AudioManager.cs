@@ -33,6 +33,11 @@ namespace Maneuver.SoundSystem
 
             var list = GetList(cat);
 
+            // Para categorias de voz única (tipicamente Music), uma segunda chamada
+            // para o mesmo clip deve reutilizar a reprodução atual em vez de abrir outra fonte.
+            if (cat.MaxVoices <= 1 && list.Any(s => s && s.isPlaying && s.clip == audioFile.Clip))
+                return;
+
             // Regras por categoria
             if (cat.MaxVoices <= 1)
             {
