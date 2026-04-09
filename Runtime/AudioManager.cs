@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace Maneuver.SoundSystem
 {
@@ -10,6 +11,7 @@ namespace Maneuver.SoundSystem
     {
         private AudioSourceBuilder _audioSourceBuilder;
         private SoundPool _soundPool;
+        private IRuntimeAudioResolver _runtimeAudioResolver;
 
         // categoria -> fontes ativas (em uso)
         private readonly Dictionary<AudioCategory, List<AudioSource>> _activeByCategory = new();
@@ -18,65 +20,59 @@ namespace Maneuver.SoundSystem
         {
             _soundPool = GetComponent<SoundPool>();
             _audioSourceBuilder = new AudioSourceBuilder(_soundPool);
+            _runtimeAudioResolver ??= new UnityWebRequestAudioResolver();
         }
 
-        public async void Play(AudioFileObject audioFile)
+        public void SetRuntimeAudioResolver(IRuntimeAudioResolver runtimeAudioResolver)
         {
-            if (!audioFile || !audioFile.Clip) return;
+            _runtimeAudioResolver = runtimeAudioResolver ?? new UnityWebRequestAudioResolver();
+        }
 
-            var cat = audioFile.Category;
-            if (!cat)
+        public void Play(AudioFileObject audioFile)
+        {
+            PlayInternal(audioFile).Forget();
+        }
+
+        public async UniTask PlayFromUrl(string url, AudioCategory category, bool loop = false)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return;
+
+            if (!category)
             {
-                Debug.LogWarning($"AudioFileObject '{audioFile.name}' está sem categoria.");
+                Debug.LogWarning($"Audio url '{url}' está sem categoria.");
                 return;
             }
 
-            var list = GetList(cat);
-
-            // Para categorias de voz única (tipicamente Music), uma segunda chamada
-            // para o mesmo clip deve reutilizar a reprodução atual em vez de abrir outra fonte.
-            if (cat.MaxVoices <= 1 && list.Any(s => s && s.isPlaying && s.clip == audioFile.Clip))
-                return;
-
-            // Regras por categoria
-            if (cat.MaxVoices <= 1)
-            {
-                if (cat.UseCrossfade && list.Count > 0)
-                {
-                    await PlayWithCrossfade(audioFile, list, cat.CrossfadeTime);
-                    return;
-                }
-                else
-                {
-                    await StopCategory(cat, immediate: true, fadeOut: 0f);
-                }
-            }
-            else
-            {
-                // Limita vozes (voice stealing simples: para os mais antigos)
-                TrimToMax(list, cat.MaxVoices - 1); // deixa 1 slot pro novo
-            }
-
-            // Construção e play
-            var src = BuildSource(audioFile, transform);
-            list.Add(src);
+            var clip = await _runtimeAudioResolver.GetClip(url, InferAudioType(url));
+            var runtimeFile = RuntimeAudioFileFactory.Create(clip, loop, category);
 
             try
             {
-                // Começa no volume alvo (pool já garante src.volume = 1f)
-                src.Play();
-
-                // Espera terminar (loop só sai se alguém parar)
-                await UniTask.WaitUntil(() => !src || !src.isPlaying);
+                await PlayInternal(runtimeFile);
             }
             finally
             {
-                if (src)
-                {
-                    list.Remove(src);
-                    SafeRelease(src); // pool reseta tudo (inclui volume=1f)
-                }
+                RuntimeAudioFileFactory.Release(runtimeFile);
             }
+        }
+
+        public async UniTask PreloadFromUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return;
+
+            await _runtimeAudioResolver.GetClip(url, InferAudioType(url));
+        }
+
+        public bool IsLoaded(string url)
+        {
+            return _runtimeAudioResolver.IsLoaded(url);
+        }
+
+        public void Release(string url)
+        {
+            _runtimeAudioResolver.Release(url);
         }
         public bool IsPlaying(AudioFileObject audioFile)
         {
@@ -272,6 +268,74 @@ namespace Maneuver.SoundSystem
             src.volume = 1f;
 
             return src;
+        }
+
+        private async UniTask PlayInternal(AudioFileObject audioFile)
+        {
+            if (!audioFile || !audioFile.Clip) return;
+
+            var cat = audioFile.Category;
+            if (!cat)
+            {
+                Debug.LogWarning($"AudioFileObject '{audioFile.name}' está sem categoria.");
+                return;
+            }
+
+            var list = GetList(cat);
+
+            if (cat.MaxVoices <= 1 && list.Any(s => s && s.isPlaying && s.clip == audioFile.Clip))
+                return;
+
+            if (cat.MaxVoices <= 1)
+            {
+                if (cat.UseCrossfade && list.Count > 0)
+                {
+                    await PlayWithCrossfade(audioFile, list, cat.CrossfadeTime);
+                    return;
+                }
+
+                await StopCategory(cat, immediate: true, fadeOut: 0f);
+            }
+            else
+            {
+                TrimToMax(list, cat.MaxVoices - 1);
+            }
+
+            var src = BuildSource(audioFile, transform);
+            list.Add(src);
+
+            try
+            {
+                src.Play();
+                await UniTask.WaitUntil(() => !src || !src.isPlaying);
+            }
+            finally
+            {
+                if (src)
+                {
+                    list.Remove(src);
+                    SafeRelease(src);
+                }
+            }
+        }
+
+        private static AudioType InferAudioType(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return AudioType.UNKNOWN;
+
+            var cleanUrl = url.Split('?')[0].Split('#')[0];
+            var extension = System.IO.Path.GetExtension(cleanUrl).ToLowerInvariant();
+
+            return extension switch
+            {
+                ".mp3" => AudioType.MPEG,
+                ".ogg" => AudioType.OGGVORBIS,
+                ".wav" => AudioType.WAV,
+                ".aif" => AudioType.AIFF,
+                ".aiff" => AudioType.AIFF,
+                _ => AudioType.UNKNOWN
+            };
         }
 
         private async UniTask FadeTo(AudioSource s, float target, float time)

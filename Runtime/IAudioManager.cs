@@ -6,6 +6,10 @@ namespace Maneuver.SoundSystem
     public interface IAudioManager
     {
         void Play(AudioFileObject audioFile);
+        UniTask PlayFromUrl(string url, AudioCategory category, bool loop = false);
+        UniTask PreloadFromUrl(string url);
+        bool IsLoaded(string url);
+        void Release(string url);
 
         UniTask Stop(AudioFileObject audioFile, float fadeOut = 0.1f);
         UniTask StopCategory(AudioCategory category, bool immediate = false, float fadeOut = 0.2f);

@@ -1,13 +1,13 @@
 {
   "name": "com.maneuver.soundsystem",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "Sound System",
   "description": "System  of state machine",
   "unity": "2022.3",
   "unityRelease": "0b5",
-  "documentationUrl": "https://example.com/",
-  "changelogUrl": "https://example.com/changelog.html",
-  "licensesUrl": "https://example.com/licensing.html",
+  "documentationUrl": "https://github.com/Maneuver-Studio/SoundSystem/blob/main/README.md",
+  "changelogUrl": "https://github.com/Maneuver-Studio/SoundSystem/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/Maneuver-Studio/SoundSystem/blob/main/LICENSE.md",
  "keywords": [
     "sound"
   ],
