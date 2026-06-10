@@ -183,6 +183,28 @@ namespace Maneuver.SoundSystem
             return 1f;
         }
 
+        public PlaybackInfo GetPlaybackInfo(AudioCategory category)
+        {
+            if (!category) return default;
+            if (!_activeByCategory.TryGetValue(category, out var list)) return default;
+
+            var src = list.FirstOrDefault(s => s && s.isPlaying);
+            return PlaybackInfo.FromSource(src);
+        }
+
+        public PlaybackInfo GetPlaybackInfo(AudioFileObject audioFile)
+        {
+            if (!audioFile || !audioFile.Clip) return default;
+
+            foreach (var list in _activeByCategory.Values)
+            {
+                var src = list.FirstOrDefault(s => s && s.isPlaying && s.clip == audioFile.Clip);
+                if (src) return PlaybackInfo.FromSource(src);
+            }
+
+            return default;
+        }
+
         // --------- Internals ---------
 
         private List<AudioSource> GetList(AudioCategory cat)

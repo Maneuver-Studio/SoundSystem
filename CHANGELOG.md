@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- Added `PlaybackInfo` struct with `CurrentTime`, `Duration`, and `Progress` fields.
+- Added `GetPlaybackInfo(AudioCategory)` and `GetPlaybackInfo(AudioFileObject)` to `IAudioManager` / `AudioManager` for querying current playback time (karaoke support).
+
 ## 1.0.3
 
 - Added runtime audio playback support from URL through `IAudioManager`.

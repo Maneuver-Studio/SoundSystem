@@ -25,5 +25,8 @@ namespace Maneuver.SoundSystem
         UniTask WaitUntilFinished(AudioFileObject audioFile);
         UniTask WaitUntilCategoryFinished(AudioCategory category);
         UniTask WaitUntilAllFinished();
+
+        PlaybackInfo GetPlaybackInfo(AudioCategory category);
+        PlaybackInfo GetPlaybackInfo(AudioFileObject audioFile);
     }
 }

@@ -1,8 +1,8 @@
 {
   "name": "com.maneuver.soundsystem",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "displayName": "Sound System",
-  "description": "System  of state machine",
+  "description": "Audio management system with category-based routing, pooling, crossfade, and runtime playback support",
   "unity": "2022.3",
   "unityRelease": "0b5",
   "documentationUrl": "https://github.com/Maneuver-Studio/SoundSystem/blob/main/README.md",
